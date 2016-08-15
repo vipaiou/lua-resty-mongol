@@ -29,7 +29,7 @@ local binary_mt = {}
 local utc_date = {}
 
 
-local function read_document ( get , numerical )
+local function read_document ( get , numerical, plain )
 	local bytes = le_uint_to_num ( get ( 4 ) )
 
 	local ho , hk , hv = false , false , false
@@ -47,15 +47,18 @@ local function read_document ( get , numerical )
 			v = get ( len - 1 )
 			assert ( get ( 1 ) == "\0" )
 		elseif op == "\3" then -- Embedded document
-			v = read_document ( get , false )
+			v = read_document ( get , false, plain )
 		elseif op == "\4" then -- Array
-			v = read_document ( get , true )
+			v = read_document ( get , true, plain )
 		elseif op == "\5" then -- Binary
 			local len = le_uint_to_num ( get ( 4 ) )
 			local subtype = get ( 1 )
 			v = get ( len )
 		elseif op == "\7" then -- ObjectId
 			v = new_object_id ( get ( 12 ) )
+			if plain then
+			   v = oid.tostring(oid)
+			end
 		elseif op == "\8" then -- false
 			local f = get ( 1 )
 			if f == "\0" then
@@ -113,8 +116,8 @@ local function get_bin_data(v)
     return setmetatable({v = v, st = "\0"}, binary_mt)
 end
 
-local function from_bson ( get )
-	local t = read_document ( get , false )
+local function from_bson ( get, plain )
+	local t = read_document ( get , false, plain )
 	return t
 end
 

@@ -93,7 +93,7 @@ function cursor_methods:sort(field, size)
     return self.results
 end
 
-function cursor_methods:next()
+function cursor_methods:next(plain)
     if self.limit_n > 0 and self.i >= self.limit_n then return nil end
 
     local v = self.results [ self.i + 1 ]
@@ -114,14 +114,14 @@ function cursor_methods:next()
         end
     else
         self.id, self.results, t = self.col:getmore(self.id, 
-                        self.num_each, self.i)
+                        self.num_each, self.i, plain)
         if self.id == "\0\0\0\0\0\0\0\0" then
             self.done = true
         elseif t.CursorNotFound then
             self.id = false
         end
     end
-    return self:next ( )
+    return self:next (plain)
 end
 
 function cursor_methods:pairs( )
